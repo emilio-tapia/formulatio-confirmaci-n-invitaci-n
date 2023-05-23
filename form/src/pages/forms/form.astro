@@ -1,0 +1,314 @@
+---
+// import { Input } from '../../../components/ui/input';
+---
+
+<form
+  class="form gform"
+  role="form"
+  action="https://script.google.com/macros/s/AKfycbw2sAe9jNnqz-EoWwjHG1l8T63vJ0B_dO0TVE0vcWvqk-K-gnERnIbGP4UkxA0HLLjl/exec"
+  method="POST"
+>
+  <div id="fields">
+    <div class="text-field">
+      <input
+        type="text"
+        name="Familias"
+        placeholder="Apellidos de la familia"
+      />
+      <input
+        type="number"
+        name="Asistentes"
+        placeholder="Número de asistentes"
+      />
+      <!-- <button id="addfield">+</button> -->
+    </div>
+  </div>
+  <input type="submit" value="Confirmar" id="submitbtn" />
+</form>
+<span id="pop-warn" data-popup="hide">Por favor llena el campo vacio</span>
+
+<style lang="scss">
+  [data-popup] {
+    // position: absolute;
+    right: 0;
+    bottom: -30%;
+    transition: opacity 0.5s;
+    margin-inline: auto;
+    margin-block-start: 1rem;
+  }
+  [data-popup='hide'] {
+    opacity: 0;
+  }
+  [data-popup='show'] {
+    opacity: 1;
+  }
+
+  form {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: column;
+    gap: 1rem;
+
+    &::after {
+      content: '';
+      position: absolute;
+      opacity: 1;
+      width: 100%;
+      height: 20%;
+      background: #ddd;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 30%);
+      filter: blur(30px);
+    }
+
+    & > * {
+      flex: 1 1 7ch;
+
+      &[type='email'] {
+        flex: 1;
+      }
+    }
+  }
+
+  .text-field {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 1rem;
+    height: 100%;
+
+    input {
+      flex: 1;
+    }
+
+    button {
+      flex: 0.2;
+      border-radius: 20%;
+      aspect-ratio: 1/1;
+      border: none;
+      font-size: 2rem;
+      cursor: pointer;
+    }
+  }
+
+  input {
+    border: none;
+    background: hsl(0, 0%, 99%);
+    border-radius: 0.25rem;
+    padding-inline: 1rem;
+
+    &[type='submit'] {
+      background: linear-gradient(145deg, #a54256, rgb(188 75 75));
+      color: white;
+      box-shadow: 0 0.75rem 1rem -0.7rem hsl(0 30% 40% / 1);
+      transition: 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      position: relative;
+
+      &:active {
+        scale: 0.98;
+      }
+
+      //   &::after {
+      //     &:hover {
+      //       opacity: 1;
+      //     }
+      //   }
+    }
+  }
+
+  #submitbtn {
+    &::before {
+      content: '';
+      position: absolute;
+      opacity: 1;
+      width: 100%;
+      height: 20%;
+      background: #ddd;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%, 30%);
+      filter: blur(30px);
+    }
+  }
+</style>
+
+<script>
+  //   const btn = document.getElementById('addfield');
+  //   btn.addEventListener('click', handleFieldAdd);
+
+  //   function handleFieldAdd(e) {
+  //     e.preventDefault();
+  //     if (
+  //       e.target.previousElementSibling.value &&
+  //       e.target.previousElementSibling.previousElementSibling.value
+  //     ) {
+  //       //   createField();
+  //     } else {
+
+  //     }
+  //   }
+
+  //   function createField() {
+  //     const fieldsDiv = document.getElementById('fields');
+  //     const newfield = document.createElement('div');
+  //     newfield.className = 'text-field';
+  //     newfield.innerHTML = `
+  //     <input type="text" placeholder="Nombre" />
+  //       <input type="text" placeholder="Apellido" />
+  //       <button id="addfield">+</button>`;
+  //     fieldsDiv.appendChild(newfield);
+  //   }
+
+  function showWarn() {
+    const popWarn = document.getElementById('pop-warn');
+    popWarn.setAttribute('data-popup', 'show');
+
+    setTimeout(() => {
+      popWarn.setAttribute('data-popup', 'hide');
+    }, 1000);
+  }
+
+  // --------------------
+  // FORM TO GMAIL/SHEET
+  // --------------------
+
+  (function () {
+    function validEmail(email) {
+      var re =
+        /^([\w-]+(?:\.[\w-]+)*)@((?:[\w-]+\.)*\w[\w-]{0,66})\.([a-z]{2,6}(?:\.[a-z]{2})?)$/i;
+      return re.test(email);
+    }
+
+    function getFormData(form) {
+      var elements = form.elements;
+
+      var fields = Object.keys(elements)
+        .filter(function (k) {
+          return elements[k].name !== 'honeypot';
+        })
+        .map(function (k) {
+          if (elements[k].name !== undefined) {
+            return elements[k].name;
+          } else if (elements[k].length > 0) {
+            return elements[k].item(0).name;
+          }
+        })
+        .filter(function (item, pos, self) {
+          return self.indexOf(item) == pos && item;
+        });
+
+      var formData = {
+        formDataNameOrder: null,
+        formGoogleSheetName: null,
+        formGoogleSendEmail: null,
+      };
+      fields.forEach(function (name) {
+        var element = elements[name];
+        formData[name] = element.value;
+        if (element.length) {
+          var data = [];
+          for (var i = 0; i < element.length; i++) {
+            var item = element.item(i);
+            if (item.checked || item.selected) {
+              data.push(item.value);
+            }
+          }
+          formData[name] = data.join(', ');
+        }
+      });
+
+      // add form-specific values into the data
+      formData.formDataNameOrder = JSON.stringify(fields);
+      formData.formGoogleSheetName = form.dataset.sheet || 'Hoja 1'; // default sheet name
+      formData.formGoogleSendEmail =
+        form.dataset.email || 'emiliota95@gmail.com'; // no email by default
+
+      return formData;
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      var form = event.target;
+      var data = getFormData(form);
+      console.log(data);
+
+      if (data.Asistentes == '') {
+        showWarn();
+        return;
+      }
+
+      if (data.Familias == '') {
+        showWarn();
+        return;
+      }
+      // } else {
+      // }
+      disableAllButtons(form);
+      var url = form.action;
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', url);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      xhr.onreadystatechange = function () {
+        if (xhr.responseText != '') {
+          const responseText = JSON.parse(xhr.responseText);
+          if (responseText.result === 'error') return;
+        }
+
+        if (xhr.status === 200) {
+          var sucessMessage = form.querySelector('.sucessMessage');
+          if (sucessMessage) {
+            sucessMessage.style.visibility = 'visible';
+            sucessMessage.style.opacity = '1';
+          }
+
+          var inputsForm = form.querySelectorAll('.inputContainer input');
+          var textareaForm = form.querySelector('textarea');
+          inputsForm.forEach((input) => {
+            input.value = '';
+          });
+          // textareaForm.value = '';
+
+          // const formInputsList = document.querySelectorAll(
+          //   '.inputContainer input'
+          // );
+          // const formIconList =
+          //   document.querySelectorAll('.iconContainer svg');
+
+          // formInputsList.forEach((input) => {
+          //   input.style.color = '#878787';
+          //   input.style.borderBottom = '1px solid #878787';
+          // });
+          // formIconList.forEach((input) => {
+          //   input.style.fill = '#878787';
+          // });
+        }
+
+        return;
+      };
+      var encoded = Object.keys(data)
+        .map(function (k) {
+          return encodeURIComponent(k) + '=' + encodeURIComponent(data[k]);
+        })
+        .join('&');
+      xhr.send(encoded);
+    }
+
+    function loaded() {
+      var forms = document.querySelectorAll('form.gform');
+      for (var i = 0; i < forms.length; i++) {
+        forms[i].addEventListener('submit', handleFormSubmit, false);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loaded, false);
+
+    function disableAllButtons(form) {
+      var buttons = form.querySelectorAll('button');
+      for (var i = 0; i < buttons.length; i++) {
+        buttons[i].disabled = true;
+      }
+    }
+  })();
+</script>
